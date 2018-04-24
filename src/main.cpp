@@ -13,6 +13,18 @@
 
 #include <gfxfont.h>
 #include <Fonts/FreeMono9pt7b.h>
+#include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/FreeSerif9pt7b.h>
+#include <Fonts/FreeSans12pt7b.h>
+#include <Fonts/Org_01.h>
+#include <Fonts/Picopixel.h>
+
+// const GFXfont *gfxFont=&FreeMono9pt7b;
+// const GFXfont *gfxFont=&FreeSans9pt7b;
+const GFXfont *gfxFont=&FreeSerif9pt7b;
+// const GFXfont *gfxFont=&Org_01;
+// const GFXfont *gfxFont=&Picopixel;
+
 
 //topology
 #define LED_COUNT 300
@@ -353,7 +365,6 @@ void periodic_checks()
 
 
 
-const GFXfont *gfxFont=&FreeMono9pt7b;
 
 class ProgressiveScroller
 {
@@ -361,7 +372,9 @@ class ProgressiveScroller
     int charnr=0;
     int xoffset=0;
     int space=0;
-    String text="Tool. Box. ";
+    String text="toolbox      ";
+    RgbColor color;
+
 
     void step()
     {
@@ -380,8 +393,9 @@ class ProgressiveScroller
       else
       {
         //draw one pixelline of a character
+        color=RgbColor( (charnr%6)*64, ((charnr+1)%6)*64, ((charnr+2)%6)*64) ;
 
-        if (drawCharLine(text[charnr], xoffset, RgbColor(128,0,0)))
+        if (drawCharLine(text[charnr], xoffset, color))
         {
           //character complete
           xoffset=0;
@@ -534,7 +548,7 @@ void loop(void){
 
     //cap at 60 fps
     // while (micros()-last_micros < 16666);
-    while (micros()-last_micros < 128000);
+    while (micros()-last_micros < 64000);
     last_micros=micros();
 
 }
