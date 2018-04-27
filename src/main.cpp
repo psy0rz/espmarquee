@@ -46,8 +46,8 @@ private:
   RgbColor bgcolor;
   char current_char;
   unsigned long last_micros=0;
-  int fps=20;
-  
+  int fps=25;
+
 public:
   int version=0;
 
@@ -59,6 +59,7 @@ public:
     xoffset=0;
     color=RgbColor(255,0,0);
     bgcolor=0;
+    fps=25;
     gotoNextChar();
   }
 
@@ -110,6 +111,12 @@ public:
               bgcolor=htmlcolor;
               break;
             }
+            // speed
+            case 'S':
+            {
+              fps=params.toInt();
+              break;
+            }
             default:
             {
               break;
@@ -139,10 +146,10 @@ public:
   {
     unsigned long delta=micros()-last_micros;
     // Serial.println(delta);
-    if (delta < (1000000/FPS))
+    if (delta < (1000000/fps))
     {
-      unsigned long time_left= (1000000/FPS)  - ( delta);
-      idle_us=idle_us+time_left;
+      unsigned long time_left= (1000000/fps)  - ( delta);
+      // idle_us=idle_us+time_left;
       // delayMicroseconds(time_left);
       delay(time_left/1000);
     }
@@ -154,6 +161,8 @@ public:
   //step one pixel
   void step()
   {
+    fpswait();
+
     //erase text as this point
     for(int i=0;i<8; i++)
     strip.SetPixelColor( topo.Map(3,i), RgbColor(0,0,0));
@@ -338,7 +347,7 @@ void periodic_checks()
 
 }
 
-unsigned long idle_us=0;
+// unsigned long idle_us=0;
 void loop(void){
   // Serial.println("lup");
   server.handleClient();
@@ -349,10 +358,10 @@ void loop(void){
   //ArduinoOTA.handle();
 
   //do periodic checks ever 10s
-  if ((millis()-last_check)>1000)
+  if ((millis()-last_check)>10000)
   {
-    Serial.printf("Load: %d\n", 100- ((idle_us/10)/(millis()-last_check) ));
-    idle_us=0;
+    // Serial.printf("Load: %d\n", 100- ((idle_us/10)/(millis()-last_check) ));
+    // idle_us=0;
 
     periodic_checks();
     last_check=millis();
