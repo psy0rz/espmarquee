@@ -19,9 +19,11 @@
 #include <Fonts/Org_01.h>
 #include <Fonts/Picopixel.h>
 
+#include <font.h>
+
 // const GFXfont *gfxFont=&FreeMono9pt7b;
 // const GFXfont *gfxFont=&FreeSans9pt7b;
-const GFXfont *gfxFont=&FreeSerif9pt7b;
+// const GFXfont *gfxFont=&FreeSerif9pt7b;
 // const GFXfont *gfxFont=&Org_01;
 // const GFXfont *gfxFont=&Picopixel;
 
@@ -205,153 +207,6 @@ void setup(void){
 
 
 
-    // // load default animation from flash
-    // File fh=SPIFFS.open("commands.dat", "r+");
-    // if (fh)
-    // {
-    //     strip_anim.add_commands_clear();
-    //
-    //     while(fh.available())
-    //     {
-    //       // Serial.println("byteee");
-    //         uint8_t b;
-    //         b=fh.read();
-    //         strip_anim.add_commands(&b, 1);
-    //     }
-    //     fh.close();
-    //     strip_anim.add_commands_activate(false);
-    // }
-
-
-    // server.on("/set_commands", HTTP_POST, [](){
-    //     smooth=false;
-    //     return_ok();
-    // }, handle_set_commands);
-    //
-    // server.on("/set_commands", HTTP_OPTIONS, [](){
-    //     return_ok();
-    // });
-    //
-    // server.on("/set_commands_smooth", HTTP_POST, [](){
-    //     smooth=true;
-    //     return_ok();
-    // }, handle_set_commands);
-    //
-    // server.on("/set_commands_smooth", HTTP_OPTIONS, [](){
-    //     return_ok();
-    // });
-
-    //power on/off ATX supply. when booting we always turn the ATX power on. (you can turn it off via the webgui)
-    // pinMode(PIN_POWER_ON, OUTPUT);
-    // digitalWrite(PIN_POWER_ON, 1);
-    // server.on("/off", HTTP_GET, [](){
-    //     digitalWrite(PIN_POWER_ON, 0);
-    //     return_ok();
-    // });
-    //
-    // server.on("/on", HTTP_GET, [](){
-    //     digitalWrite(PIN_POWER_ON, 1);
-    //     return_ok();
-    // });
-
-    //save current command string to SPIFFS
-    // server.on("/save", HTTP_GET, [](){
-    //     // server.send(404, "text/plain", "FileNotFound");
-    //     File fh=SPIFFS.open("commands.dat", "w");
-    //     if (!fh)
-    //     {
-    //         return_error(F("Error creating save file."));
-    //     }
-    //     else
-    //     {
-    //         commands_t::iterator i;
-    //         i=strip_anim.commands.begin();
-    //         while(i!=strip_anim.commands.end())
-    //         {
-    //             if (fh.write(*i)!=1)
-    //             {
-    //                 fh.close();
-    //                 return_error(F("Error while saving."));
-    //                 return;
-    //             }
-    //             i++;
-    //         }
-    //         fh.close();
-    //         return_ok(F("Saved current animation as default."));
-    //     }
-    // });
-    //
-    // server.onNotFound([](){
-    //     if(!handleFileRead(server.uri()))
-    //     {
-    //         server.send(404, "text/plain", "FileNotFound");
-    //         // server.client().stop();
-    //     }
-    // });
-    //
-    // server.begin();
-
-
-    // Port defaults to 8266
-    // ArduinoOTA.setPort(8266);
-
-    // Hostname defaults to esp8266-[ChipID]
-    // ArduinoOTA.setHostname("myesp8266");
-
-
-    // No authentication by default
-    // ArduinoOTA.setPassword((const char *)"123");
-
-//     ArduinoOTA.onStart([]() {
-//         Serial.println("OTA: Start");
-//         SPIFFS.end(); //important
-//         strip_anim.led_anim.clear(CRGB(0,255,0)); //still safe
-//         send_leds();
-//     });
-//     ArduinoOTA.onEnd([]() {
-//         Serial.println("\nOTA: End");
-//         //"dangerous": if you reset during flash you have to reflash via serial
-//         //so dont touch device until restart is complete
-//         strip_anim.led_anim.clear(CRGB(255,0,0));
-//         send_leds();
-//         Serial.println("\nOTA: DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE.");
-//         delay(100);
-// #ifdef NEOPIXEL_CONFIG
-//         delete neopixel_strip; //imporatant, otherwise conflicts with flashing i think
-//         neopixel_strip=NULL;
-// #endif
-//         ESP.reset();
-//     });
-//     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-//
-//         Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-//         //getting more "dangerous"
-//         strip_anim.led_anim.set((progress*LED_COUNT)/total, CRGB(255,255,0));
-//         send_leds();
-//     });
-//     ArduinoOTA.onError([](ota_error_t error) {
-//         Serial.printf("Error[%u]: ", error);
-//         if (error == OTA_AUTH_ERROR) Serial.println("OTA: Auth Failed");
-//         else if (error == OTA_BEGIN_ERROR) Serial.println("OTA: Begin Failed");
-//         else if (error == OTA_CONNECT_ERROR) Serial.println("OTA: Connect Failed");
-//         else if (error == OTA_RECEIVE_ERROR) Serial.println("OTA: Receive Failed");
-//         else if (error == OTA_END_ERROR) Serial.println("OTA: End Failed");
-//     });
-//     ArduinoOTA.begin();
-
-// for(int i=0;i<8; i++)
-//   strip.SetPixelColor( topo.Map(i+o,0), RgbColor(10,0,0));
-//
-//   for(int i=0;i<8; i++)
-//     strip.SetPixelColor( topo.Map(i+o,i), RgbColor(0,10,0));
-//
-  // for(int i=0;i<8; i++)
-  //   strip.SetPixelColor( topo.Map(o,i), RgbColor(0,0,10));
-  //
-  //   strip.SetPixelColor( topo.Map(8,0), RgbColor(10,0,0));
-  //   strip.SetPixelColor( topo.Map(8,1), RgbColor(0,10,0));
-  //   strip.SetPixelColor( topo.Map(8,2), RgbColor(0,0,10));
-
 
     Serial.println("boot complete");
     Serial.println(ESP.getFreeHeap());
@@ -377,7 +232,7 @@ class ProgressiveScroller
     int charnr=0;
     int xoffset=0;
     int space=0;
-    String text="Zoepm!   ";
+    String text="Welkom bij TOOLBOX   ";
     RgbColor color;
 
 
@@ -388,25 +243,24 @@ class ProgressiveScroller
         strip.SetPixelColor( topo.Map(3,i), RgbColor(0,0,0));
 
 
-      if (space){
-        //draw empty space
-        for(int i=0;i<8; i++)
-          strip.SetPixelColor( topo.Map(WIDTH-2,i), RgbColor(0,0,0));
-
-        space--;
-      }
-      else
+      // if (space){
+      //   //draw empty space
+      //   for(int i=0;i<8; i++)
+      //     strip.SetPixelColor( topo.Map(WIDTH-2,i), RgbColor(0,0,0));
+      //
+      //   space--;
+      // }
+      // else
       {
         //draw one pixelline of a character
         color=RgbColor( (charnr%6)*15, ((charnr+1)%6)*15, ((charnr+2)%6)*15) ;
         // color=RgbColor( 0,0,255) ;
 
-        if (drawCharLine(text[charnr], xoffset, color))
+        if (drawCharLine(text[charnr], WIDTH-1, xoffset, color))
         {
           //character complete
           xoffset=0;
           charnr=charnr+1;
-          space=2;
           if (charnr>=text.length())
           {
             //scrolled through all text
@@ -422,73 +276,92 @@ class ProgressiveScroller
       strip.ShiftRight(1);
     }
 
-    bool drawCharLine(unsigned char c, int16_t xoffset, RgbColor color)
+
+    //draws one vertical fontline at the x position
+    bool drawCharLine(unsigned char c, int16_t x, int16_t xoffset, RgbColor color)
     {
-      int x=WIDTH-2;
-      // int y=HEIGHT-1;
-      // int y=0;
-  //
-  //
-  //
-  //
-  //     void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c,
-  // uint16_t color, uint16_t bg, uint8_t size) {
+      const uint8_t *charbase = FontData + (( c - ASCII_OFFSET)* FONT_WIDTH );
 
 
-        // Character is assumed previously filtered by write() to eliminate
-        // newlines, returns, non-printable characters, etc.  Calling
-        // drawChar() directly with 'bad' characters of font may cause mayhem!
+      char pixels;
 
-        c -= (uint8_t)pgm_read_byte(&gfxFont->first);
-        GFXglyph *glyph  = &(((GFXglyph *)pgm_read_pointer(&gfxFont->glyph))[c]);
-        uint8_t  *bitmap = (uint8_t *)pgm_read_pointer(&gfxFont->bitmap);
+      //at the end of this fonts data yet?
+      if (xoffset<FONT_WIDTH)
+        pixels=pgm_read_byte_near(charbase+xoffset);
+      else
+        pixels=0;
 
-        uint16_t bo = pgm_read_word(&glyph->bitmapOffset);
-        uint8_t  w  = pgm_read_byte(&glyph->width),
-                 h  = pgm_read_byte(&glyph->height);
-        int8_t   xo = pgm_read_byte(&glyph->xOffset),
-                 yo = pgm_read_byte(&glyph->yOffset);
-        uint8_t  xx, yy, bits = 0, bit = 0;
-        int16_t  xo16 = 0, yo16 = 0;
-
-        // if(size > 1) {
-        //     xo16 = xo;
-        //     yo16 = yo;
-        // }
-
-        for(yy=0; yy<h; yy++) {
-            for(xx=0; xx<w; xx++)
-            {
-                if(!(bit++ & 7)) {
-                    bits = pgm_read_byte(&bitmap[bo++]);
-                }
-
-                if (xx==xoffset)
-                {
-                  int y=yo+yy+HEIGHT-1;  //font starts at the bottom and works up
-
-                  if (y>=0 && y<HEIGHT)
-                  {
-                    if(bits & 0x80) {
-                      //pixel on
-                      // strip.SetPixelColor( topo.Map(x+xo+xx,y+yo+yy), color);
-                      strip.SetPixelColor( topo.Map(x,y), color);
-                    }
-                    else
-                    {
-                      //off
-                      // strip.SetPixelColor( topo.Map(x+xo+xx,y+yo+yy), RgbColor(0,0,0));
-                      strip.SetPixelColor( topo.Map(x,y), RgbColor(0,0,0));
-
-                    }
-                  }
-                }
-                bits <<= 1;
-            }
-        }
-
-        return(xoffset+1>=w);
+      for (int16_t y=0; y<FONT_HEIGHT; y++)
+      {
+        if (pixels & (1<<(FONT_HEIGHT-y)))
+            strip.SetPixelColor( topo.Map(x,y), color);
+        else
+          strip.SetPixelColor( topo.Map(x,y), 0);
       }
+
+      //letter + space complete?
+      if (xoffset>=FONT_WIDTH)
+        return true;
+      else
+        return false;
+    }
+
+
+    // //obsolete for now, adafruit fonts too big for this marquee
+    // bool drawCharLine(unsigned char c, int16_t xoffset, RgbColor color)
+    // {
+    //     int x=WIDTH-2;
+    //
+    //     c -= (uint8_t)pgm_read_byte(&gfxFont->first);
+    //     GFXglyph *glyph  = &(((GFXglyph *)pgm_read_pointer(&gfxFont->glyph))[c]);
+    //     uint8_t  *bitmap = (uint8_t *)pgm_read_pointer(&gfxFont->bitmap);
+    //
+    //     uint16_t bo = pgm_read_word(&glyph->bitmapOffset);
+    //     uint8_t  w  = pgm_read_byte(&glyph->width),
+    //              h  = pgm_read_byte(&glyph->height);
+    //     int8_t   xo = pgm_read_byte(&glyph->xOffset),
+    //              yo = pgm_read_byte(&glyph->yOffset);
+    //     uint8_t  xx, yy, bits = 0, bit = 0;
+    //     int16_t  xo16 = 0, yo16 = 0;
+    //
+    //     // if(size > 1) {
+    //     //     xo16 = xo;
+    //     //     yo16 = yo;
+    //     // }
+    //
+    //     for(yy=0; yy<h; yy++) {
+    //         for(xx=0; xx<w; xx++)
+    //         {
+    //             if(!(bit++ & 7)) {
+    //                 bits = pgm_read_byte(&bitmap[bo++]);
+    //             }
+    //
+    //             if (xx==xoffset)
+    //             {
+    //               int y=yo+yy+HEIGHT-1;  //font starts at the bottom and works up
+    //
+    //               if (y>=0 && y<HEIGHT)
+    //               {
+    //                 if(bits & 0x80) {
+    //                   //pixel on
+    //                   // strip.SetPixelColor( topo.Map(x+xo+xx,y+yo+yy), color);
+    //                   strip.SetPixelColor( topo.Map(x,y), color);
+    //                 }
+    //                 else
+    //                 {
+    //                   //off
+    //                   // strip.SetPixelColor( topo.Map(x+xo+xx,y+yo+yy), RgbColor(0,0,0));
+    //                   strip.SetPixelColor( topo.Map(x,y), RgbColor(0,0,0));
+    //
+    //                 }
+    //               }
+    //             }
+    //             bits <<= 1;
+    //         }
+    //     }
+    //
+    //     return(xoffset+1>=w);
+    //   }
 };
 
 
