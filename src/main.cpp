@@ -168,7 +168,8 @@ void handleRoot() {
 
   String html="";
   html=F("\
-  <!doctype html><html><head></head><body>\
+  <!doctype html>\
+  <html><head><meta name='viewport' content='width=device-width, initial-scale=1'></head><body>\
   <form method='post'>\
   <input type='submit' value='send'><br>\
   <textarea autofocus name='txt' rows=40 cols=40>");
