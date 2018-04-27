@@ -5,7 +5,7 @@
 #include <ESP8266WebServer.h>
 // #include <ESP8266mDNS.h>
 // #include <WiFiUdp.h>
-// #include <ArduinoOTA.h>
+#include <ArduinoOTA.h>
 
 #include "FS.h"
 #include <NeoPixelBus.h>
@@ -23,7 +23,7 @@
 
 NeoTopology <RowMajor180Layout> topo(WIDTH,HEIGHT);
 // NeoPixelBus<NEOPIXEL_CONFIG> strip(LED_COUNT);
-NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod> strip(LED_COUNT);
+NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod> *strip=new NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod>(LED_COUNT);
 
 
 
@@ -67,7 +67,7 @@ public:
   {
     version++;
     reset();
-    strip.ClearTo(0);
+    strip->ClearTo(0);
     text=new_text;
   }
 
@@ -165,7 +165,7 @@ public:
 
     //erase text as this point
     for(int i=0;i<8; i++)
-    strip.SetPixelColor( topo.Map(3,i), RgbColor(0,0,0));
+    strip->SetPixelColor( topo.Map(3,i), RgbColor(0,0,0));
 
     //draw one pixelline of a character
 
@@ -181,8 +181,8 @@ public:
       xoffset=xoffset+1;
     }
 
-    strip.ShiftRight(1);
-    strip.Show();
+    strip->ShiftRight(1);
+    strip->Show();
   }
 
 
@@ -203,9 +203,9 @@ public:
     for (int16_t y=0; y<FONT_HEIGHT; y++)
     {
       if (pixels & (1<<(FONT_HEIGHT-y)))
-      strip.SetPixelColor( topo.Map(x,y), color);
+      strip->SetPixelColor( topo.Map(x,y), color);
       else
-      strip.SetPixelColor( topo.Map(x,y), bgcolor);
+      strip->SetPixelColor( topo.Map(x,y), bgcolor);
     }
 
     //letter + space complete?
@@ -284,6 +284,14 @@ void wifi_config()
 
 int saved_version=0;
 
+void progress(int percentage, RgbColor color)
+{
+  for (int i=0; i< percentage*50/100; i++)
+  strip->SetPixelColor(i, color);
+  strip->Show();
+
+}
+
 void setup(void){
   Serial.begin(115200);
 
@@ -294,7 +302,7 @@ void setup(void){
   // Serial.println(ESP.getSketchSize());
   // Serial.println(ESP.getFreeSketchSpace());
 
-  strip.Begin();
+  strip->Begin();
 
 
   if (!SPIFFS.begin())
@@ -311,6 +319,42 @@ void setup(void){
   Serial.print("wifi ok\n");
   else
   Serial.print("wifi failed\n");
+
+  // OTA
+  ArduinoOTA.onStart([]() {
+    Serial.println("OTA: Start");
+    SPIFFS.end(); //important
+    strip->ClearTo(0);
+    progress(100,RgbColor(0,255,0));
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nOTA: End");
+    //"dangerous": if you reset during flash you have to reflash via serial
+    //so dont touch device until restart is complete
+    progress(100,RgbColor(255,0,0));
+    Serial.println("\nOTA: DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE.");
+    delay(100);
+
+    delete strip; //imporatant, otherwise conflicts with flashing i think
+
+    ESP.reset();
+  });
+  ArduinoOTA.onProgress([](unsigned int done, unsigned int total) {
+
+    Serial.printf("Progress: %u%%\r", (done * 100 / total));
+    //getting more "dangerous"
+    progress(done*100/total, RgbColor(255,255,0));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("OTA: Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("OTA: Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("OTA: Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("OTA: Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("OTA: End Failed");
+  });
+  ArduinoOTA.begin();
+
 
 
   // load text
@@ -350,41 +394,16 @@ void periodic_checks()
 // unsigned long idle_us=0;
 void loop(void){
   // Serial.println("lup");
+  ArduinoOTA.handle();
   server.handleClient();
-
-
-
-
-  //ArduinoOTA.handle();
 
   //do periodic checks ever 10s
   if ((millis()-last_check)>10000)
   {
-    // Serial.printf("Load: %d\n", 100- ((idle_us/10)/(millis()-last_check) ));
-    // idle_us=0;
 
     periodic_checks();
     last_check=millis();
   }
-
-
-  //profiling
-  // Serial.print("microseconds used: ");
-  // Serial.println(micros()-last_micros);
-  // with the last tests i did it was usually lower than 2000uS (for both strips)
-
-
-
-
-
-  // strip.ClearTo(RgbColor(0,0,0));
-  // while(!strip.CanShow()) yield();
-  //strip.Show();
-  // strip.RotateLeft(1);
-
-  //cap at 60 fps
-  // while (micros()-last_micros < 16666);
-  // int count=0;
 
   scroller.step();
 
