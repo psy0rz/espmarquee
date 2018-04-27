@@ -1,11 +1,11 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>
+// #include <WiFiClient.h>
+// #include <ESP8266WebServer.h>
+// #include <ESP8266mDNS.h>
+// #include <WiFiUdp.h>
+// #include <ArduinoOTA.h>
 
 #include "FS.h"
 #include <NeoPixelBus.h>
@@ -27,12 +27,16 @@ const GFXfont *gfxFont=&FreeSerif9pt7b;
 
 
 //topology
-#define LED_COUNT 300
 #define WIDTH 38
 #define HEIGHT 8
+// #define WIDTH 144*2
+// #define HEIGHT 9
+#define LED_COUNT WIDTH*HEIGHT
+#define FPS 30
 
 NeoTopology <RowMajor180Layout> topo(WIDTH,HEIGHT);
-NeoPixelBus<NEOPIXEL_CONFIG> strip(LED_COUNT);
+// NeoPixelBus<NEOPIXEL_CONFIG> strip(LED_COUNT);
+NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod> strip(LED_COUNT);
 
 
 
@@ -47,7 +51,7 @@ NeoPixelBus<NEOPIXEL_CONFIG> strip(LED_COUNT);
 
 
 
-ESP8266WebServer server(80);
+// ESP8266WebServer server(80);
 // strip_anim_c<LED_COUNT> strip_anim;
 
 
@@ -350,6 +354,7 @@ void setup(void){
 
 
     Serial.println("boot complete");
+    Serial.println(ESP.getFreeHeap());
 }
 
 
@@ -372,7 +377,7 @@ class ProgressiveScroller
     int charnr=0;
     int xoffset=0;
     int space=0;
-    String text="toolbox      ";
+    String text="Zoepm!   ";
     RgbColor color;
 
 
@@ -393,7 +398,8 @@ class ProgressiveScroller
       else
       {
         //draw one pixelline of a character
-        color=RgbColor( (charnr%6)*64, ((charnr+1)%6)*64, ((charnr+2)%6)*64) ;
+        color=RgbColor( (charnr%6)*15, ((charnr+1)%6)*15, ((charnr+2)%6)*15) ;
+        // color=RgbColor( 0,0,255) ;
 
         if (drawCharLine(text[charnr], xoffset, color))
         {
@@ -494,13 +500,13 @@ ProgressiveScroller scroller;
 
 
 
-
+unsigned long idle_us=0;
 
 
 
 void loop(void){
     // Serial.println("lup");
-    server.handleClient();
+    //server.handleClient();
 
 
     if (WiFi.status() != last_wifi_status)
@@ -522,11 +528,14 @@ void loop(void){
     }
 
 
-    ArduinoOTA.handle();
+    //ArduinoOTA.handle();
 
     //do periodic checks ever 10s
-    if ((millis()-last_check)>10000)
+    if ((millis()-last_check)>1000)
     {
+      Serial.printf("Load: %d\n", 100- ((idle_us/10)/(millis()-last_check) ));
+      idle_us=0;
+
       periodic_checks();
       last_check=millis();
     }
@@ -543,12 +552,24 @@ void loop(void){
 
     // strip.ClearTo(RgbColor(0,0,0));
     scroller.step();
+    while(!strip.CanShow()) yield();
     strip.Show();
     // strip.RotateLeft(1);
 
     //cap at 60 fps
     // while (micros()-last_micros < 16666);
-    while (micros()-last_micros < 64000);
+    int count=0;
+
+    unsigned long delta=micros()-last_micros;
+    // Serial.println(delta);
+    if (delta < (1000000/FPS))
+    {
+      unsigned long time_left= (1000000/FPS)  - ( delta);
+      idle_us=idle_us+time_left;
+      delayMicroseconds(time_left);
+    }
+//    while (micros()-last_micros < 1500*0.03*2) count++;
+    // Serial.println(count);
     last_micros=micros();
 
 }
