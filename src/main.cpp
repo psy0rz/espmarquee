@@ -9,23 +9,9 @@
 
 #include "FS.h"
 #include <NeoPixelBus.h>
-
-
-#include <gfxfont.h>
-#include <Fonts/FreeMono9pt7b.h>
-#include <Fonts/FreeSans9pt7b.h>
-#include <Fonts/FreeSerif9pt7b.h>
-#include <Fonts/FreeSans12pt7b.h>
-#include <Fonts/Org_01.h>
-#include <Fonts/Picopixel.h>
+#include <internal/HtmlColor.h>
 
 #include <font.h>
-
-// const GFXfont *gfxFont=&FreeMono9pt7b;
-// const GFXfont *gfxFont=&FreeSans9pt7b;
-// const GFXfont *gfxFont=&FreeSerif9pt7b;
-// const GFXfont *gfxFont=&Org_01;
-// const GFXfont *gfxFont=&Picopixel;
 
 
 //topology
@@ -34,7 +20,6 @@
 // #define WIDTH 144*2
 // #define HEIGHT 9
 #define LED_COUNT WIDTH*HEIGHT
-#define FPS 20
 
 NeoTopology <RowMajor180Layout> topo(WIDTH,HEIGHT);
 // NeoPixelBus<NEOPIXEL_CONFIG> strip(LED_COUNT);
@@ -58,7 +43,11 @@ private:
   int xoffset=0;
   String text=".";
   RgbColor color;
-
+  RgbColor bgcolor;
+  char current_char;
+  unsigned long last_micros=0;
+  int fps=20;
+  
 public:
   int version=0;
 
@@ -69,6 +58,8 @@ public:
     charnr=0;
     xoffset=0;
     color=RgbColor(255,0,0);
+    bgcolor=0;
+    gotoNextChar();
   }
 
   void setText(const String & new_text)
@@ -84,30 +75,97 @@ public:
     return(text);
   }
 
+  //get next character to be displayed and parse macros
+  void gotoNextChar()
+  {
+
+    //filter garbage (newline) and parse escape chars
+    while(charnr<text.length() && ( text[charnr]<ASCII_OFFSET || text[charnr]=='['))
+    {
+      //start of macro
+      if (text[charnr]=='[')
+      {
+        int close=text.indexOf(']', charnr);
+        //found end?
+        if (close>=charnr+2)
+        {
+          char cmd=text[charnr+1];
+
+          String params=text.substring(charnr+2,close);
+          switch(cmd)
+          {
+            // foreground color
+            case '#':
+            {
+              HtmlColor htmlcolor;
+              htmlcolor.Parse<HtmlColorNames>(text.substring(charnr+1,close));
+              color=htmlcolor;
+              break;
+            }
+            // background color
+            case 'B':
+            {
+              HtmlColor htmlcolor;
+              htmlcolor.Parse<HtmlColorNames>(params);
+              bgcolor=htmlcolor;
+              break;
+            }
+            default:
+            {
+              break;
+            }
+          }
+        }
+        charnr=close;
+      }
+      charnr++;
+    }
+
+    //no valid chars left?
+    if (charnr>=text.length())
+    {
+      current_char=' ';
+      reset();
+    }
+    else
+    {
+      current_char=text[charnr];
+      charnr=charnr+1;
+    }
+  }
+
+
+  void fpswait()
+  {
+    unsigned long delta=micros()-last_micros;
+    // Serial.println(delta);
+    if (delta < (1000000/FPS))
+    {
+      unsigned long time_left= (1000000/FPS)  - ( delta);
+      idle_us=idle_us+time_left;
+      // delayMicroseconds(time_left);
+      delay(time_left/1000);
+    }
+    //    while (micros()-last_micros < 1500*0.03*2) count++;
+    // Serial.println(count);
+    last_micros=micros();
+  }
+
+  //step one pixel
   void step()
   {
-    //stop text as this point
+    //erase text as this point
     for(int i=0;i<8; i++)
     strip.SetPixelColor( topo.Map(3,i), RgbColor(0,0,0));
 
     //draw one pixelline of a character
-    color=RgbColor( (charnr%6)*15, ((charnr+1)%6)*15, ((charnr+2)%6)*15) ;
-    // color=RgbColor( 0,0,255) ;
 
-    if (drawCharLine(text[charnr], WIDTH-1, xoffset, color))
+    if (drawCharLine(current_char, WIDTH-1, xoffset, color))
     {
-      //character complete
+      //character complete, go to next character
       xoffset=0;
-      charnr=charnr+1;
+      gotoNextChar();
 
-      //filter garbage (newlines and stuff)
-      while(charnr<text.length() && text[charnr]<ASCII_OFFSET) charnr++;
-
-      if (charnr>=text.length())
-      {
-        //scrolled through all text
-        reset();
-      }
     }
     else
     {
@@ -138,7 +196,7 @@ public:
       if (pixels & (1<<(FONT_HEIGHT-y)))
       strip.SetPixelColor( topo.Map(x,y), color);
       else
-      strip.SetPixelColor( topo.Map(x,y), 0);
+      strip.SetPixelColor( topo.Map(x,y), bgcolor);
     }
 
     //letter + space complete?
@@ -260,7 +318,6 @@ void setup(void){
 }
 
 
-unsigned long last_micros=0;
 int last_wifi_status=-1;
 unsigned long last_check=0;
 
@@ -272,10 +329,10 @@ void periodic_checks()
 
   if (saved_version != scroller.version)
   {
-      Serial.println("Saving text to flash");
-      File fh = SPIFFS.open("/text.txt", "w");
-      fh.print(scroller.getText());
-      saved_version=scroller.version;
+    Serial.println("Saving text to flash");
+    File fh = SPIFFS.open("/text.txt", "w");
+    fh.print(scroller.getText());
+    saved_version=scroller.version;
   }
 
 
@@ -318,20 +375,8 @@ void loop(void){
 
   //cap at 60 fps
   // while (micros()-last_micros < 16666);
-  int count=0;
+  // int count=0;
 
-  unsigned long delta=micros()-last_micros;
-  // Serial.println(delta);
-  if (delta < (1000000/FPS))
-  {
-    unsigned long time_left= (1000000/FPS)  - ( delta);
-    idle_us=idle_us+time_left;
-    // delayMicroseconds(time_left);
-    delay(time_left/1000);
-  }
-  //    while (micros()-last_micros < 1500*0.03*2) count++;
-  // Serial.println(count);
-  last_micros=micros();
   scroller.step();
 
 }
