@@ -12,7 +12,7 @@
 #include <internal/HtmlColor.h>
 
 #include <font.h>
-
+// #include <txbuf.hpp>
 
 //topology
 #define WIDTH 38
@@ -66,9 +66,9 @@ public:
   void setText(const String & new_text)
   {
     version++;
+    text=new_text;
     reset();
     strip->ClearTo(0);
-    text=new_text;
   }
 
   const String & getText()
@@ -234,19 +234,62 @@ void handleRoot() {
 
 
   String html="";
-  html=F("\
-  <!doctype html>\
-  <html><head><meta name='viewport' content='width=device-width, initial-scale=1'></head><body>\
-  <form method='post'>\
-  <input type='submit' value='send'><br>\
-  <textarea autofocus name='txt' rows=40 cols=40>");
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200);
+  server.sendContent(F("\
+<!doctype html>\
+<html><head>\
+<style>\
+p {\
+display: inline-block;\
+border-style: solid;\
+padding: 0.5em;\
+margin: 0.1em;\
+min-width: 2em;\
+text-align: center;\
+}\
+</style>\
+<script>\
+  function typeInTextarea(el, newText) {\
+  var start = el.selectionStart;\
+  var end = el.selectionEnd;\
+  var text = el.value;\
+  var before = text.substring(0, start);\
+  var after  = text.substring(end, text.length);\
+  el.value = (before + newText + after);\
+  el.selectionStart = el.selectionEnd = start + newText.length;\
+  el.focus();\
+  };\
+ function i(text) {\
+  typeInTextarea(document.getElementById('txt'), text);\
+};\
+</script>"));
 
-  html=html+scroller.getText();
+  server.sendContent(F("\
+<meta name='viewport' content='width=device-width, initial-scale=1'>\
+</head><body>\
+<p onclick='i(\"[#ff0000]\")' style='background-color: #ff0000'>.</p>\
+<p onclick='i(\"[#00ff00]\")' style='background-color: #00ff00'>.</p>\
+<p onclick='i(\"[#0000ff]\")' style='background-color: #0000ff'>.</p>\
+<p onclick='i(\"[#ffff00]\")' style='background-color: #ffff00'>.</p>\
+<p onclick='i(\"[#00ffff]\")' style='background-color: #00ffff'>.</p>\
+<p onclick='i(\"[#ff00ff]\")' style='background-color: #ff00ff'>.</p>\
+<p onclick='i(\"[#ffffff]\")' style='background-color: #ffffff'>.</p>\
+<p onclick='i(\"[S20]\")' >20pps</p>\
+<p onclick='i(\"[S25]\")' >25pps</p>\
+<p onclick='i(\"[S30]\")' >30pps</p>\
+<p onclick='i(\"[#ffffff]T[#ff0000]00[#ffffff]LB[#ff0000]o[#ffffff]X\")' >logo</p>\
+<form method='post'>\
+<p><input type='submit' value='send'></p><br>\
+<textarea autofocus id='txt' name='txt' rows=40 cols=40>"));
 
-  html=html+F("</textarea>\
+  server.sendContent(scroller.getText());
+
+  server.sendContent(F("</textarea>\
   </form>\
-  </body>");
-  server.send(200, "text/html",html);
+  </body>"));
+  // server.send(200, "text/html",html);
+  server.sendContent("");
 
 
 }
