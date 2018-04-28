@@ -81,7 +81,7 @@ public:
   {
 
     //filter garbage (newline) and parse escape chars
-    while(charnr<text.length() && ( text[charnr]<ASCII_OFFSET || text[charnr]=='['))
+    while(charnr<text.length() && ( text[charnr]<' ' || text[charnr]=='['))
     {
       //start of macro
       if (text[charnr]=='[')
@@ -95,6 +95,26 @@ public:
           String params=text.substring(charnr+2,close);
           switch(cmd)
           {
+
+            //special characters
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            {
+              current_char=cmd-'0';
+              charnr=close+1;
+              return;
+              break;
+            }
+
+
             // foreground color
             case '#':
             {
@@ -278,7 +298,7 @@ text-align: center;\
 <p onclick='i(\"[S20]\")' >20pps</p>\
 <p onclick='i(\"[S25]\")' >25pps</p>\
 <p onclick='i(\"[S30]\")' >30pps</p>\
-<p onclick='i(\"[#ffffff]T[#ff0000]00[#ffffff]LB[#ff0000]o[#ffffff]X\")' >logo</p>\
+<p onclick='i(\"[#ffffff]T[#ff0000][1][2][#ffffff]LB[#ff0000][0][#ffffff]X\")' >logo</p>\
 <form method='post'>\
 <p><input type='submit' value='send'></p><br>\
 <textarea autofocus id='txt' name='txt' rows=40 cols=40>"));

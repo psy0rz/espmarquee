@@ -17,7 +17,7 @@
 #define FONT_WIDTH 5
 #define FONT_HEIGHT 7
 #define INTERCHAR_SPACE 1
-#define ASCII_OFFSET 0x20 - 3    // ASSCI code of 1st char in font array
+#define ASCII_OFFSET 0    // ASSCI code of 1st char in font array
 
 const uint8_t FontData[] PROGMEM = {
 
