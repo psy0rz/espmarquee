@@ -27,8 +27,8 @@
 
 
 //////////// use correct led library
-#define STRIP_LPD8806
-// #define STRIP_WS2812GRBW
+// #define STRIP_LPD8806
+#define STRIP_WS2812GRBW
 // #define STRIP_WS2812GRB
 #include "strip.hpp"
 
@@ -43,6 +43,26 @@ NeoTopology <RowMajor180Layout> topo(WIDTH,HEIGHT);
 #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
 #endif
 
+ColorClass hextocolor(const String & colorstr)
+{
+  int r=0;
+  int g=0;
+  int b=0;
+  int w=0;
+  if (colorstr.length()>=6)
+  {
+    r=strtol(colorstr.substring(0,2).c_str(), 0, 16);
+    g=strtol(colorstr.substring(2,4).c_str(), 0, 16);
+    b=strtol(colorstr.substring(4,6).c_str(), 0, 16);
+    if (colorstr.length()==8)
+    {
+      w=strtol(colorstr.substring(6,8).c_str(), 0, 16);
+    }
+  }
+  return(ColorClass(r,g,b,w));
+}
+
+
 class ProgressiveScroller
 {
 private:
@@ -51,7 +71,6 @@ private:
   String text=".";
   ColorClass color;
   ColorClass bgcolor;
-  uint8_t whitecolor;
   char current_char;
   unsigned long last_micros=0;
   int fps=25;
@@ -65,10 +84,9 @@ public:
   {
     charnr=0;
     xoffset=0;
-    color=ColorClass(255,255,255);
+    color=ColorClass(255,0,0,0);
     bgcolor=0;
     fps=25;
-    whitecolor=0;
     gotoNextChar();
   }
 
@@ -127,24 +145,13 @@ public:
             // foreground color
             case '#':
             {
-              // HtmlColor htmlcolor;
-              // htmlcolor.Parse<HtmlColorNames>(text.substring(charnr+1,close));
-              color=ColorClass(255,255,255);
+              color=hextocolor(params);
               break;
             }
             // background color
             case 'B':
             {
-              HtmlColor htmlcolor;
-              htmlcolor.Parse<HtmlColorNames>(params);
-              // bgcolor=htmlcolor;
-              break;
-            }
-            // white led brightness (for rgbw strips)
-            case 'W':
-            {
-              whitecolor=params.toInt();
-              Serial.println(whitecolor);
+              bgcolor=hextocolor(params);
               break;
             }
             // speed
@@ -240,7 +247,7 @@ public:
     {
       if (pixels & (1<<(FONT_HEIGHT-y)))
       {
-          stripSet( topo.Map(x,y), color);
+        stripSet( topo.Map(x,y), color);
       }
       else
       {
@@ -436,6 +443,8 @@ void setup(void){
     else if (error == OTA_CONNECT_ERROR) Serial.println("OTA: Connect Failed");
     else if (error == OTA_RECEIVE_ERROR) Serial.println("OTA: Receive Failed");
     else if (error == OTA_END_ERROR) Serial.println("OTA: End Failed");
+    delay(100);
+    ESP.reset();
   });
   ArduinoOTA.begin();
 
