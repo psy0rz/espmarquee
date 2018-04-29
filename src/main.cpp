@@ -16,15 +16,17 @@
 
 //topology
 #define WIDTH 38
-#define HEIGHT 8
+#define HEIGHT 7
 // #define WIDTH 144*2
 // #define HEIGHT 9
 #define LED_COUNT WIDTH*HEIGHT
 
-NeoTopology <RowMajor180Layout> topo(WIDTH,HEIGHT);
 // NeoPixelBus<NEOPIXEL_CONFIG> strip(LED_COUNT);
-NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod> *strip=new NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod>(LED_COUNT);
 
+NeoTopology <RowMajor180Layout> topo(WIDTH,HEIGHT);
+// NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod> *strip=new NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod>(LED_COUNT);
+
+NeoPixelBus<NeoGrbwFeature,Neo800KbpsMethod> *strip=new NeoPixelBus<NeoGrbwFeature,Neo800KbpsMethod>(LED_COUNT);
 
 
 // Pointers are a peculiar case...typically 16-bit on AVR boards,
@@ -44,6 +46,7 @@ private:
   String text=".";
   RgbColor color;
   RgbColor bgcolor;
+  uint8_t whitecolor;
   char current_char;
   unsigned long last_micros=0;
   int fps=25;
@@ -60,6 +63,7 @@ public:
     color=RgbColor(255,0,0);
     bgcolor=0;
     fps=25;
+    whitecolor=0;
     gotoNextChar();
   }
 
@@ -129,6 +133,13 @@ public:
               HtmlColor htmlcolor;
               htmlcolor.Parse<HtmlColorNames>(params);
               bgcolor=htmlcolor;
+              break;
+            }
+            // white led brightness (for rgbw strips)
+            case 'W':
+            {
+              whitecolor=params.toInt();
+              Serial.println(whitecolor);
               break;
             }
             // speed
@@ -223,9 +234,21 @@ public:
     for (int16_t y=0; y<FONT_HEIGHT; y++)
     {
       if (pixels & (1<<(FONT_HEIGHT-y)))
-      strip->SetPixelColor( topo.Map(x,y), color);
+      {
+        if (whitecolor)
+        {
+          strip->SetPixelColor( topo.Map(x,y), RgbwColor(color.R, color.G, color.B, whitecolor));
+        }
+        else
+        {
+          strip->SetPixelColor( topo.Map(x,y), color);
+
+        }
+      }
       else
-      strip->SetPixelColor( topo.Map(x,y), bgcolor);
+      {
+        strip->SetPixelColor( topo.Map(x,y), bgcolor);
+      }
     }
 
     //letter + space complete?
@@ -257,51 +280,52 @@ void handleRoot() {
   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   server.send(200);
   server.sendContent(F("\
-<!doctype html>\
-<html><head>\
-<style>\
-p {\
-display: inline-block;\
-border-style: solid;\
-padding: 0.5em;\
-margin: 0.1em;\
-min-width: 2em;\
-text-align: center;\
-}\
-</style>\
-<script>\
+  <!doctype html>\
+  <html><head>\
+  <style>\
+  p {\
+    display: inline-block;\
+    border-style: solid;\
+    padding: 0.5em;\
+    margin: 0.1em;\
+    min-width: 2em;\
+    text-align: center;\
+  }\
+  </style>\
+  <script>\
   function typeInTextarea(el, newText) {\
-  var start = el.selectionStart;\
-  var end = el.selectionEnd;\
-  var text = el.value;\
-  var before = text.substring(0, start);\
-  var after  = text.substring(end, text.length);\
-  el.value = (before + newText + after);\
-  el.selectionStart = el.selectionEnd = start + newText.length;\
-  el.focus();\
+    var start = el.selectionStart;\
+    var end = el.selectionEnd;\
+    var text = el.value;\
+    var before = text.substring(0, start);\
+    var after  = text.substring(end, text.length);\
+    el.value = (before + newText + after);\
+    el.selectionStart = el.selectionEnd = start + newText.length;\
+    el.focus();\
   };\
- function i(text) {\
-  typeInTextarea(document.getElementById('txt'), text);\
-};\
-</script>"));
+  function i(text) {\
+    typeInTextarea(document.getElementById('txt'), text);\
+  };\
+  </script>"));
 
   server.sendContent(F("\
-<meta name='viewport' content='width=device-width, initial-scale=1'>\
-</head><body>\
-<p onclick='i(\"[#ff0000]\")' style='background-color: #ff0000'>.</p>\
-<p onclick='i(\"[#00ff00]\")' style='background-color: #00ff00'>.</p>\
-<p onclick='i(\"[#0000ff]\")' style='background-color: #0000ff'>.</p>\
-<p onclick='i(\"[#ffff00]\")' style='background-color: #ffff00'>.</p>\
-<p onclick='i(\"[#00ffff]\")' style='background-color: #00ffff'>.</p>\
-<p onclick='i(\"[#ff00ff]\")' style='background-color: #ff00ff'>.</p>\
-<p onclick='i(\"[#ffffff]\")' style='background-color: #ffffff'>.</p>\
-<p onclick='i(\"[S20]\")' >20pps</p>\
-<p onclick='i(\"[S25]\")' >25pps</p>\
-<p onclick='i(\"[S30]\")' >30pps</p>\
-<p onclick='i(\"[#ffffff]T[#ff0000][1][2][#ffffff]LB[#ff0000][0][#ffffff]X\")' >logo</p>\
-<form method='post'>\
-<p><input type='submit' value='send'></p><br>\
-<textarea autofocus id='txt' name='txt' rows=40 cols=40>"));
+  <meta name='viewport' content='width=device-width, initial-scale=1'>\
+  </head><body>\
+  <p onclick='i(\"[#ff0000]\")' style='background-color: #ff0000'>.</p>\
+  <p onclick='i(\"[#00ff00]\")' style='background-color: #00ff00'>.</p>\
+  <p onclick='i(\"[#0000ff]\")' style='background-color: #0000ff'>.</p>\
+  <form method='post'>\
+  <p><input type='submit' value='send'></p><br>\
+  <textarea autofocus id='txt' name='txt' rows=40 cols=40>"));
+
+  // <p onclick='i(\"[#ffff00]\")' style='background-color: #ffff00'>.</p>\
+  // <p onclick='i(\"[#00ffff]\")' style='background-color: #00ffff'>.</p>\
+  // <p onclick='i(\"[#ff00ff]\")' style='background-color: #ff00ff'>.</p>\
+  // <p onclick='i(\"[#ffffff]\")' style='background-color: #ffffff'>.</p>\
+  // <p onclick='i(\"[S20]\")' >20pps</p>\
+  // <p onclick='i(\"[S25]\")' >25pps</p>\
+  // <p onclick='i(\"[S30]\")' >30pps</p>\
+  // <p onclick='i(\"[#ffffff]T[#ff0000][1][2][#ffffff]LB[#ff0000][0][#ffffff]X\")' >logo</p>\
 
   server.sendContent(scroller.getText());
 
