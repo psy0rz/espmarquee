@@ -318,18 +318,19 @@ void handleRoot() {
   <p onclick='i(\"[#ff0000]\")' style='background-color: #ff0000'>.</p>\
   <p onclick='i(\"[#00ff00]\")' style='background-color: #00ff00'>.</p>\
   <p onclick='i(\"[#0000ff]\")' style='background-color: #0000ff'>.</p>\
+  <p onclick='i(\"[#000000ff]\")' style='background-color: #ffffff'>.</p>\
+  <p onclick='i(\"[S25]\")' >speed</p>\
   <form method='post'>\
   <p><input type='submit' value='send'></p><br>\
   <textarea autofocus id='txt' name='txt' rows=40 cols=40>"));
 
-  // <p onclick='i(\"[#ffff00]\")' style='background-color: #ffff00'>.</p>\
-  // <p onclick='i(\"[#00ffff]\")' style='background-color: #00ffff'>.</p>\
-  // <p onclick='i(\"[#ff00ff]\")' style='background-color: #ff00ff'>.</p>\
-  // <p onclick='i(\"[#ffffff]\")' style='background-color: #ffffff'>.</p>\
-  // <p onclick='i(\"[S20]\")' >20pps</p>\
   // <p onclick='i(\"[S25]\")' >25pps</p>\
   // <p onclick='i(\"[S30]\")' >30pps</p>\
   // <p onclick='i(\"[#ffffff]T[#ff0000][1][2][#ffffff]LB[#ff0000][0][#ffffff]X\")' >logo</p>\
+  // <p onclick='i(\"[#00ffff]\")' style='background-color: #00ffff'>.</p>\
+  // <p onclick='i(\"[#ff00ff]\")' style='background-color: #ff00ff'>.</p>\
+  // <p onclick='i(\"[#ffffff]\")' style='background-color: #ffffff'>.</p>\
+
 
   server.sendContent(scroller.getText());
 
