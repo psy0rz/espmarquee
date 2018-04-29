@@ -8,10 +8,13 @@
 #include <ArduinoOTA.h>
 
 #include "FS.h"
-#include <internal/HtmlColor.h>
+#include <HtmlColor.h>
+#include <NeoTopology.h>
+#include <Layouts.h>
 
 #include <font.h>
 // #include <txbuf.hpp>
+
 
 //topology
 #define WIDTH 38
@@ -24,10 +27,10 @@
 
 
 //////////// use correct led library
-// #define STRIP_LPD8806
-#define STRIP_WS2812GRBW
+#define STRIP_LPD8806
+// #define STRIP_WS2812GRBW
 // #define STRIP_WS2812GRB
-#include <strip.hpp>
+#include "strip.hpp"
 
 NeoTopology <RowMajor180Layout> topo(WIDTH,HEIGHT);
 
@@ -62,7 +65,7 @@ public:
   {
     charnr=0;
     xoffset=0;
-    color=ColorClass(255,0,0);
+    color=ColorClass(255,255,255);
     bgcolor=0;
     fps=25;
     whitecolor=0;
@@ -124,9 +127,9 @@ public:
             // foreground color
             case '#':
             {
-              HtmlColor htmlcolor;
-              htmlcolor.Parse<HtmlColorNames>(text.substring(charnr+1,close));
-              color=htmlcolor;
+              // HtmlColor htmlcolor;
+              // htmlcolor.Parse<HtmlColorNames>(text.substring(charnr+1,close));
+              color=ColorClass(255,255,255);
               break;
             }
             // background color
@@ -134,7 +137,7 @@ public:
             {
               HtmlColor htmlcolor;
               htmlcolor.Parse<HtmlColorNames>(params);
-              bgcolor=htmlcolor;
+              // bgcolor=htmlcolor;
               break;
             }
             // white led brightness (for rgbw strips)
@@ -198,7 +201,7 @@ public:
 
     //erase text as this point
     for(int i=0;i<8; i++)
-    stripSet( topo.Map(3,i), ColorClass(0,0,0,0));
+    stripSet( topo.Map(3,i), ColorClass(0,0,0));
 
     //draw one pixelline of a character
 
@@ -405,8 +408,8 @@ void setup(void){
   ArduinoOTA.onStart([]() {
     Serial.println("OTA: Start");
     SPIFFS.end(); //important
-    stripClear(ColorClass(0,0,0,0));
-    progress(100,ColorClass(0,255,0,0));
+    stripClear(ColorClass(0,0,0));
+    progress(100,ColorClass(0,255,0));
   });
   ArduinoOTA.onEnd([]() {
     Serial.println("\nOTA: End");
