@@ -8,7 +8,6 @@
 #include <ArduinoOTA.h>
 
 #include "FS.h"
-#include <NeoPixelBus.h>
 #include <internal/HtmlColor.h>
 
 #include <font.h>
@@ -23,11 +22,14 @@
 
 // NeoPixelBus<NEOPIXEL_CONFIG> strip(LED_COUNT);
 
+
+//////////// use correct led library
+// #define STRIP_LPD8806
+#define STRIP_WS2812GRBW
+// #define STRIP_WS2812GRB
+#include <strip.hpp>
+
 NeoTopology <RowMajor180Layout> topo(WIDTH,HEIGHT);
-// NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod> *strip=new NeoPixelBus<NeoGrbFeature,Neo800KbpsMethod>(LED_COUNT);
-
-NeoPixelBus<NeoGrbwFeature,Neo800KbpsMethod> *strip=new NeoPixelBus<NeoGrbwFeature,Neo800KbpsMethod>(LED_COUNT);
-
 
 // Pointers are a peculiar case...typically 16-bit on AVR boards,
 // 32 bits elsewhere.  Try to accommodate both...
@@ -44,8 +46,8 @@ private:
   int charnr=0;
   int xoffset=0;
   String text=".";
-  RgbColor color;
-  RgbColor bgcolor;
+  ColorClass color;
+  ColorClass bgcolor;
   uint8_t whitecolor;
   char current_char;
   unsigned long last_micros=0;
@@ -60,7 +62,7 @@ public:
   {
     charnr=0;
     xoffset=0;
-    color=RgbColor(255,0,0);
+    color=ColorClass(255,0,0);
     bgcolor=0;
     fps=25;
     whitecolor=0;
@@ -72,7 +74,7 @@ public:
     version++;
     text=new_text;
     reset();
-    strip->ClearTo(0);
+    stripClear(0);
   }
 
   const String & getText()
@@ -196,7 +198,7 @@ public:
 
     //erase text as this point
     for(int i=0;i<8; i++)
-    strip->SetPixelColor( topo.Map(3,i), RgbColor(0,0,0));
+    stripSet( topo.Map(3,i), ColorClass(0,0,0,0));
 
     //draw one pixelline of a character
 
@@ -212,13 +214,13 @@ public:
       xoffset=xoffset+1;
     }
 
-    strip->ShiftRight(1);
-    strip->Show();
+    stripShiftRight();
+    stripShow();
   }
 
 
   //draws one vertical fontline at the x position
-  bool drawCharLine(unsigned char c, int16_t x, int16_t xoffset, RgbColor color)
+  bool drawCharLine(unsigned char c, int16_t x, int16_t xoffset, ColorClass color)
   {
     const uint8_t *charbase = FontData + (( c - ASCII_OFFSET)* FONT_WIDTH );
 
@@ -235,19 +237,11 @@ public:
     {
       if (pixels & (1<<(FONT_HEIGHT-y)))
       {
-        if (whitecolor)
-        {
-          strip->SetPixelColor( topo.Map(x,y), RgbwColor(color.R, color.G, color.B, whitecolor));
-        }
-        else
-        {
-          strip->SetPixelColor( topo.Map(x,y), color);
-
-        }
+          stripSet( topo.Map(x,y), color);
       }
       else
       {
-        strip->SetPixelColor( topo.Map(x,y), bgcolor);
+        stripSet( topo.Map(x,y), bgcolor);
       }
     }
 
@@ -371,11 +365,11 @@ void wifi_config()
 
 int saved_version=0;
 
-void progress(int percentage, RgbColor color)
+void progress(int percentage, ColorClass color)
 {
   for (int i=0; i< percentage*50/100; i++)
-  strip->SetPixelColor(i, color);
-  strip->Show();
+  stripSet(i, color);
+  stripShow();
 
 }
 
@@ -389,7 +383,7 @@ void setup(void){
   // Serial.println(ESP.getSketchSize());
   // Serial.println(ESP.getFreeSketchSpace());
 
-  strip->Begin();
+  stripInit();
 
 
   if (!SPIFFS.begin())
@@ -411,14 +405,14 @@ void setup(void){
   ArduinoOTA.onStart([]() {
     Serial.println("OTA: Start");
     SPIFFS.end(); //important
-    strip->ClearTo(0);
-    progress(100,RgbColor(0,255,0));
+    stripClear(ColorClass(0,0,0,0));
+    progress(100,ColorClass(0,255,0,0));
   });
   ArduinoOTA.onEnd([]() {
     Serial.println("\nOTA: End");
     //"dangerous": if you reset during flash you have to reflash via serial
     //so dont touch device until restart is complete
-    progress(100,RgbColor(255,0,0));
+    progress(100,ColorClass(255,0,0));
     Serial.println("\nOTA: DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE.");
     delay(100);
 
@@ -430,7 +424,7 @@ void setup(void){
 
     Serial.printf("Progress: %u%%\r", (done * 100 / total));
     //getting more "dangerous"
-    progress(done*100/total, RgbColor(255,255,0));
+    progress(done*100/total, ColorClass(255,255,0));
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
